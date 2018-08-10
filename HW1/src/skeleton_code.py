@@ -181,7 +181,7 @@ def batch_grad_descent(X, y, alpha=0.1, num_iter=1000, check_gradient=False):
     theta_hist = np.zeros((num_iter + 1, num_features))  # initialize theta_hist
     loss_hist = np.zeros(num_iter + 1)                   # initialize loss_hist
 
-    theta_hist[0,:] = np.zeros(num_features) 
+    theta_hist[0,:] = np.random.randn(num_features) 
     loss_hist[0] = compute_square_loss(X, y, theta_hist[0,:])
     for i in range(0, num_iter):
         theta_hist[i+1,:] = theta_hist[i,:] - alpha * compute_square_loss_gradient(X, y, theta_hist[i,:])
