@@ -6,6 +6,7 @@ import logging
 import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.cross_validation import train_test_split
+from numpy import zeros, ones
 
 ### Assignment Owner: Tian Wang
 
@@ -160,7 +161,7 @@ def generic_gradient_checker(X, y, theta, objective_func, gradient_func, epsilon
 
 ####################################
 #### Batch Gradient Descent
-def batch_grad_descent(X, y, alpha=0.1, num_iter=1000, check_gradient=False):
+def batch_grad_descent(X, y, alpha=0.1, backtracking=False, num_iter=1000, check_gradient=False):
     """
     In this question you will implement batch gradient descent to
     minimize the square loss objective
@@ -180,20 +181,42 @@ def batch_grad_descent(X, y, alpha=0.1, num_iter=1000, check_gradient=False):
     num_instances, num_features = X.shape
     theta_hist = np.zeros((num_iter + 1, num_features))  # initialize theta_hist
     loss_hist = np.zeros(num_iter + 1)                   # initialize loss_hist
+    stepsize_hist = np.zeros(num_iter)
 
     theta_hist[0,:] = np.random.randn(num_features) 
     loss_hist[0] = compute_square_loss(X, y, theta_hist[0,:])
-    for i in range(0, num_iter):
-        theta_hist[i+1,:] = theta_hist[i,:] - alpha * compute_square_loss_gradient(X, y, theta_hist[i,:])
-        loss_hist[i+1] = compute_square_loss(X, y, theta_hist[i+1,:])
+    if backtracking:
+        a, b = 0.4, 0.5
 
-    return theta_hist, loss_hist
+        for i in range(num_iter):
+            t = 1
+            theta0 = theta_hist[i,:]
+            f0 = compute_square_loss(X, y, theta0)
+            desc_direction = -compute_square_loss_gradient(X, y, theta0)
+            gradient = -desc_direction
+            slope = np.dot(gradient, desc_direction)
+
+            while True:
+                fnext = compute_square_loss(X, y, theta0 + t * desc_direction)
+                if fnext <= (f0 + t * a * slope):
+                    theta_hist[i+1,:] = theta0 + t * desc_direction
+                    loss_hist[i+1] = compute_square_loss(X, y, theta_hist[i+1,:])
+                    stepsize_hist[i] = t
+                    break
+                else:
+                    t *= b
+    else:
+        stepsize_hist = alpha * ones(num_iter)
+        for i in range(0, num_iter):
+            theta_hist[i+1,:] = theta_hist[i,:] - alpha * compute_square_loss_gradient(X, y, theta_hist[i,:])
+            loss_hist[i+1] = compute_square_loss(X, y, theta_hist[i+1,:])
+
+    return theta_hist, loss_hist, stepsize_hist
 
 ####################################
 ###Q2.4b: Implement backtracking line search in batch_gradient_descent
 ###Check http://en.wikipedia.org/wiki/Backtracking_line_search for details
 #TODO
-
 
 
 ###################################################
@@ -215,7 +238,7 @@ def compute_regularized_square_loss_gradient(X, y, theta, lambda_reg):
 
 ###################################################
 ### Batch Gradient Descent with regularization term
-def regularized_grad_descent(X, y, alpha=0.1, lambda_reg=1, num_iter=1000):
+def regularized_grad_descent(X, y, alpha=0.1, lambda_reg=1, backtracking=False, num_iter=1000):
     """
     Args:
         X - the feature vector, 2D numpy array of size (num_instances, num_features)
@@ -229,16 +252,39 @@ def regularized_grad_descent(X, y, alpha=0.1, lambda_reg=1, num_iter=1000):
         loss_hist - the history of loss function without the regularization term, 1D numpy array.
     """
     (num_instances, num_features) = X.shape
-    theta_hist = np.zeros((num_iter + 1, num_features))  # initialize theta_hist
-    loss_hist = np.zeros(num_iter+1)                     # initialize loss_hist
+    theta_hist = zeros((num_iter + 1, num_features))  # initialize theta_hist
+    loss_hist = zeros(num_iter + 1)                   # initialize loss_hist
+    stepsize_hist = zeros(num_iter + 1)
 
-    theta_hist[0,:] = np.zeros(num_features) 
+    theta_hist[0,:] = zeros(num_features) 
     loss_hist[0] = compute_square_loss(X, y, theta_hist[0,:]) + lambda_reg * np.sum(np.square(theta_hist[0,:]))
-    for i in range(0, num_iter):
-        theta_hist[i+1,:] = theta_hist[i,:] - alpha * compute_square_loss_gradient(X, y, theta_hist[i,:])
-        loss_hist[i+1] = compute_square_loss(X, y, theta_hist[i+1,:]) + lambda_reg * np.sum(np.square(theta_hist[i,:]))
 
-    return theta_hist, loss_hist
+    if backtracking:
+        a, b = 0.4, 0.5
+
+        for i in range(num_iter):
+            t = 1
+            theta0 = theta_hist[i,:]
+            f0 = compute_square_loss(X, y, theta0)
+            desc_direction = -compute_regularized_square_loss_gradient(X, y, theta0, lambda_reg)
+            gradient = -desc_direction
+            slope = np.dot(gradient, desc_direction)
+
+            while True:
+                fnext = compute_square_loss(X, y, theta0 + t * desc_direction)
+                if fnext <= (f0 + t * a * slope):
+                    theta_hist[i+1,:] = theta0 + t * desc_direction
+                    loss_hist[i+1] = compute_square_loss(X, y, theta_hist[i+1,:])
+                    stepsize_hist[i] = t
+                    break
+                else:
+                    t *= b
+    else:
+        for i in range(0, num_iter):
+            theta_hist[i+1,:] = theta_hist[i,:] - alpha * compute_regularized_square_loss_gradient(X, y, theta_hist[i,:], lambda_reg)
+            loss_hist[i+1] = compute_square_loss(X, y, theta_hist[i+1,:]) 
+
+    return theta_hist, loss_hist, stepsize_hist
 
 #############################################
 ## Visualization of Regularized Batch Gradient Descent
@@ -267,11 +313,38 @@ def stochastic_grad_descent(X, y, alpha=0.1, lambda_reg=1, num_iter=1000):
         loss hist - the history of regularized loss function vector, 2D numpy array of size(num_iter, num_instances)
     """
     num_instances, num_features = X.shape
-    theta = np.ones(num_features) #Initialize theta
+    theta = np.ones(num_features)                                   #Initialize theta
 
     theta_hist = np.zeros((num_iter, num_instances, num_features))  #Initialize theta_hist
-    loss_hist = np.zeros((num_iter, num_instances)) #Initialize loss_hist
-    #TODO
+    loss_hist = np.zeros((num_iter, num_instances))                 #Initialize loss_hist
+    indices = np.arange(num_instances)
+
+    eta0 = 0.05
+    if isinstance(alpha, float):
+        alpha_func = lambda x : alpha
+    elif alpha == 'inv':
+        alpha_func = lambda x: eta0/x
+    elif alpha == 'invsqrt':
+        alpha_func = lambda x: eta0/np.sqrt(x)
+    elif alpha == 'rational':
+        alpha_func = lambda x: eta0 * 0.05 /(1 + eta0 * 0.05 * lambda_reg * x)
+    else:
+        raise ValueError(str) 
+
+    cnt = 1
+    for i in range(num_iter):
+        np.random.shuffle(indices)
+        for j, index in enumerate(indices):
+            a = alpha_func(cnt)
+            sgd_step = 2 * a * ((np.dot(theta, X[index,:]) - y[index]) * X[index,:] + lambda_reg * theta)
+
+            theta -= sgd_step
+            theta_hist[i,j,:] = theta
+            loss_hist[i,j] = compute_square_loss(X, y, theta) + lambda_reg * np.sum(np.square(theta))
+            cnt += 1
+
+    return theta_hist, loss_hist
+
 
 ################################################
 ### Visualization that compares the convergence speed of batch
