@@ -94,8 +94,8 @@ def do_grid_search_ridge(X_train, y_train, X_val, y_val):
     # in the previous grid. This approach works reasonably well when
     # performance is convex as a function of the hyperparameter, which it seems
     # to be here.
-    param_grid = [{'l2reg':np.unique(np.concatenate((10.**np.arange(-6,1,1),
-                                           np.arange(1,3,.3)
+    param_grid = [{'l2reg':np.unique(np.concatenate((10.**np.arange(-6,1,0.3),
+                                           np.arange(0.01,0.05,.005)
                                              ))) }]
 
     ridge_regression_estimator = RidgeRegression()
@@ -121,16 +121,16 @@ def do_grid_search_ridge(X_train, y_train, X_val, y_val):
 def compare_parameter_vectors(pred_fns):
     # Assumes pred_fns is a list of dicts, and each dict has a "name" key and a
     # "coefs" key
-    fig, axs = plt.subplots(len(pred_fns),1, sharex=True)
+    fig, axs = plt.subplots(len(pred_fns),1, figsize=(10,10), sharex=True)
     num_ftrs = len(pred_fns[0]["coefs"])
     for i in range(len(pred_fns)):
         title = pred_fns[i]["name"]
         coef_vals = pred_fns[i]["coefs"]
         axs[i].bar(range(num_ftrs), coef_vals)
-        axs[i].set_xlabel('Feature Index')
         axs[i].set_ylabel('Parameter Value')
         axs[i].set_title(title)
-
+        
+    axs[i].set_xlabel('Feature Index')
     fig.subplots_adjust(hspace=0.3)
     return fig
 

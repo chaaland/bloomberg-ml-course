@@ -127,7 +127,7 @@ def main():
     x = np.arange(0,1,.001)
     ax.plot(x, target_fn(x), 'r', label='Target function (i.e. Bayes prediction function)')
     legend = ax.legend(loc='upper center', shadow=True)
-    plt.show(block=False)
+    plt.show(block=True)
 
 if __name__ == '__main__':
   main()
