@@ -33,26 +33,27 @@ def read_data(file):
     symbols = '${}()[].,:;+-*/&|<>=~" '
     words = map(lambda Element: Element.translate(str.maketrans("", "", symbols)).strip(), lines)
     words = filter(None, words)
-    return words
-	
-###############################################
-######## YOUR CODE STARTS FROM HERE. ##########
-###############################################
+    return list(words)
 
-def shuffle_data():
+def shuffle_data(pos_path=None, neg_path=None):
     '''
     pos_path is where you save positive review data.
     neg_path is where you save negative review data.
     '''
-    pos_path = "data/pos"
-    neg_path = "data/neg"
+    if pos_path is None:
+        pos_path = "data/pos"
+    if neg_path is None:
+        neg_path = "data/neg"
 	
     pos_review = folder_list(pos_path,1)
     neg_review = folder_list(neg_path,-1)
 	
     review = pos_review + neg_review
     random.shuffle(review)
-	
+    file_name = "pickle_data.pkl"
+    with open(file_name, 'wb') as f:
+        pickle.dump(review, f)
+
 '''
 Now you have read all the files into list 'review' and it has been shuffled.
 Save your shuffled result by pickle.
