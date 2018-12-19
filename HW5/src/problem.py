@@ -21,7 +21,7 @@ def likelihood_func(w, X, y_train, likelihood_var):
 
     #TO DO
 
-    return likelihood
+    return 1/np.sqrt(2*pi * likelihood_var) * np.exp(-0.5*(y_train - X * w)/(2*likelihood_var))
 
 def get_posterior_params(X, y_train, prior, likelihood_var = 0.2**2):
     '''
