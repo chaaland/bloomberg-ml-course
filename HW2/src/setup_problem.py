@@ -17,14 +17,18 @@ def step_fn_generator(stepLoc=0):
         ret = np.zeros(len(x))
         ret[x >= stepLoc] = 1
         return ret
+
     return f
+
 
 def linear_comb_generator(fns, coefs):
     def f(x):
         return sum(fns[i](x) * coefs[i] for i in range(len(fns)))
+
     return f
 
-def get_target_and_featurizer(num_basis_fns = 100, num_nonzero = 10, coefs_true=None):
+
+def get_target_and_featurizer(num_basis_fns=100, num_nonzero=10, coefs_true=None):
     # We'll create a basis of step functions on the interval [0,1]. We'll then
     # construct a linear combination of these step functions to be our target
     # function. We'll construct a function to "featurize" an input in [0,1]
@@ -40,8 +44,10 @@ def get_target_and_featurizer(num_basis_fns = 100, num_nonzero = 10, coefs_true=
         coefs_true = np.zeros(num_basis_fns)
         coefs_true[nonzero_indices] = np.random.randn(num_nonzero)
 
-    all_basis_fns = [step_fn_generator(stepLoc=s)
-                     for s in np.linspace(0, 1, num_basis_fns, endpoint=False)]
+    all_basis_fns = [
+        step_fn_generator(stepLoc=s)
+        for s in np.linspace(0, 1, num_basis_fns, endpoint=False)
+    ]
 
     # Construct target function (the Bayes prediction function)
     target_fn = linear_comb_generator(all_basis_fns, coefs_true)
@@ -56,14 +62,16 @@ def get_target_and_featurizer(num_basis_fns = 100, num_nonzero = 10, coefs_true=
 
     return target_fn, coefs_true, featurize
 
-def generate_data(target_fn, n=1000, noise_scale=.25, tdof=6):
+
+def generate_data(target_fn, n=1000, noise_scale=0.25, tdof=6):
     # Construct dataset
-    x = np.sort(np.random.rand(n)) #chooses uniformly from [0,1)
+    x = np.sort(np.random.rand(n))  # chooses uniformly from [0,1)
     y_target = target_fn(x)
-    y = y_target + noise_scale * np.random.standard_t(tdof,n)
+    y = y_target + noise_scale * np.random.standard_t(tdof, n)
     return x, y
 
-def get_data_splits(x, y, test_frac=.2):
+
+def get_data_splits(x, y, test_frac=0.2):
     ## Based on https://github.com/ageron/handson-ml/blob/master/02_end_to_end_machine_learning_project.ipynb
     n = len(y)
     shuffled_indices = np.random.permutation(n)
@@ -77,57 +85,95 @@ def get_data_splits(x, y, test_frac=.2):
     x_test = x[indices_test]
     return x_train, y_train, x_test, y_test
 
-def generate_problem(n=200, num_basis_fns=400, num_nonzero=10, noise_scale=.25, tdof=6, test_frac=.2, write_problem=False, file_name="lasso_data.pickle"):
-    target_fn, coefs_true, featurize = get_target_and_featurizer(num_basis_fns, num_nonzero)
+
+def generate_problem(
+    n=200,
+    num_basis_fns=400,
+    num_nonzero=10,
+    noise_scale=0.25,
+    tdof=6,
+    test_frac=0.2,
+    write_problem=False,
+    file_name="lasso_data.pickle",
+):
+    target_fn, coefs_true, featurize = get_target_and_featurizer(
+        num_basis_fns, num_nonzero
+    )
     x, y = generate_data(target_fn, n, noise_scale, tdof)
     x_train, y_train, x_test, y_test = get_data_splits(x, y, test_frac)
 
     if write_problem:
-        print ("Saving problem to disk.")
-        data = {"coefs_true":coefs_true, "x_train":x_train,
-                "y_train":np.copy(y_train), "x_test":x_test, "y_test":y_test}
-        with open(file_name, 'wb') as outfile:
+        print("Saving problem to disk.")
+        data = {
+            "coefs_true": coefs_true,
+            "x_train": x_train,
+            "y_train": np.copy(y_train),
+            "x_test": x_test,
+            "y_test": y_test,
+        }
+        with open(file_name, "wb") as outfile:
             pickle.dump(data, outfile, protocol=2)
 
     return x_train, y_train, x_test, y_test, target_fn, coefs_true, featurize
+
 
 def reconstitute_problem(coefs_true, x_train, y_train, x_test, y_test):
     target_fn, coefs_true, featurize = get_target_and_featurizer(coefs_true=coefs_true)
     return x_train, y_train, x_test, y_test, target_fn, coefs_true, featurize
 
+
 def load_problem(file_name):
-    f_myfile = open(file_name, 'rb')
+    f_myfile = open(file_name, "rb")
     data = pickle.load(f_myfile)
     f_myfile.close()
-    return reconstitute_problem(data["coefs_true"], data["x_train"], data["y_train"],
-                                data["x_test"], data["y_test"])
+    return reconstitute_problem(
+        data["coefs_true"],
+        data["x_train"],
+        data["y_train"],
+        data["x_test"],
+        data["y_test"],
+    )
+
 
 def main():
     lasso_data_fname = "lasso_data.pickle"
-    LOAD_PROBLEM=True
-    GENERATE_PROBLEM=False
-    WRITE_PROBLEM=False
+    LOAD_PROBLEM = True
+    GENERATE_PROBLEM = False
+    WRITE_PROBLEM = False
     if GENERATE_PROBLEM:
-        n=1000
-        test_frac=.9
-        num_basis_fns=400
-        num_nonzero=10
-        noise_scale=.25 # scale factor on noise
-        tdof = 6 # degrees of freedom of t-distribution generating noise
-        x_train, y_train, x_val, y_val, target_fn, coefs_true, featurize = generate_problem(n=n, num_basis_fns=num_basis_fns, num_nonzero=num_nonzero, noise_scale=noise_scale, test_frac=test_frac, write_problem=WRITE_PROBLEM, file_name=lasso_data_fname)
+        n = 1000
+        test_frac = 0.9
+        num_basis_fns = 400
+        num_nonzero = 10
+        noise_scale = 0.25  # scale factor on noise
+        tdof = 6  # degrees of freedom of t-distribution generating noise
+        x_train, y_train, x_val, y_val, target_fn, coefs_true, featurize = generate_problem(
+            n=n,
+            num_basis_fns=num_basis_fns,
+            num_nonzero=num_nonzero,
+            noise_scale=noise_scale,
+            test_frac=test_frac,
+            write_problem=WRITE_PROBLEM,
+            file_name=lasso_data_fname,
+        )
 
     if LOAD_PROBLEM:
-        x_train, y_train, x_val, y_val, target_fn, coefs_true, featurize = load_problem(lasso_data_fname)
+        x_train, y_train, x_val, y_val, target_fn, coefs_true, featurize = load_problem(
+            lasso_data_fname
+        )
 
     # Let's plot the target function (i.e. the Bayes prediction function) as
     # well as the noisy observations from the training data, as a function of
     # the original input space, which is the interval [0,1).
     fig, ax = plt.subplots()
-    plt.scatter(x_train, y_train, s=3, color='k', label='Training data')
-    x = np.arange(0,1,.001)
-    ax.plot(x, target_fn(x), 'r', label='Target function (i.e. Bayes prediction function)')
-    legend = ax.legend(loc='upper center', shadow=True)
+    plt.scatter(x_train, y_train, s=3, color="k", label="Training data")
+    x = np.arange(0, 1, 0.001)
+    ax.plot(
+        x, target_fn(x), "r", label="Target function (i.e. Bayes prediction function)"
+    )
+    legend = ax.legend(loc="upper center", shadow=True)
     plt.show(block=True)
 
-if __name__ == '__main__':
-  main()
+
+if __name__ == "__main__":
+    main()
