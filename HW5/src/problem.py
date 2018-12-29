@@ -19,14 +19,10 @@ def likelihood_func(w, X, y_train, likelihood_var):
     Returns:
         likelihood: Data likelihood (float)
     """
+    normalizer = 1 / np.sqrt(2 * np.pi * likelihood_var)
+    zscore = (y_train - X * w) / np.sqrt(likelihood_var)
 
-    # TO DO
-
-    return (
-        1
-        / np.sqrt(2 * pi * likelihood_var)
-        * np.exp(-0.5 * (y_train - X * w) / (2 * likelihood_var))
-    )
+    return np.exp(-0.5 * np.square(zscore)) / normalizer
 
 
 def get_posterior_params(X, y_train, prior, likelihood_var=0.2 ** 2):
