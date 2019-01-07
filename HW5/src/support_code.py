@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 import numpy.matlib as matlib
 from scipy.stats import multivariate_normal
 import numpy as np
+from numpy import ones, zeros
 
 """
 This is support code provided for the Bayesian Regression Problems.
@@ -23,13 +24,11 @@ def generate_data(data_size, noise_params, actual_weights):
     # x1: from [0,1) to [-1,1)
     x1 = -1 + 2 * np.random.rand(data_size, 1)
     # appending the bias term
-    xtrain = np.matrix(np.c_[np.ones((data_size, 1)), x1])
+    xtrain = np.c_[ones((data_size, 1)), x1]
     # random noise
-    noise = np.matrix(
-        np.random.normal(noise_params["mean"], noise_params["var"], (data_size, 1))
-    )
+    noise = np.random.normal(noise_params["mean"], noise_params["var"], data_size)
 
-    ytrain = (xtrain * actual_weights) + noise
+    ytrain = xtrain.dot(actual_weights) + noise
 
     return xtrain, ytrain
 
@@ -45,8 +44,7 @@ def make_plots(
     get_predictive_params,
 ):
 
-    # #setup for plotting
-    #
+    # setup for plotting
     show_progress_till_data_rows = [1, 2, 10, -1]
     num_rows = 1 + len(show_progress_till_data_rows)
     num_cols = 4
@@ -60,19 +58,19 @@ def make_plots(
         current_row = round_num + 1
         first_column_pos = (current_row * num_cols) + 1
 
-        # #plot likelihood on latest point
+        # plot likelihood on latest point
         plt.subplot(num_rows, num_cols, first_column_pos)
 
+        x_seen = xtrain[:row_num,]
+        y_seen = ytrain[:row_num]
         likelihood_func_with_data = lambda W: likelihood_func(
-            W, xtrain[:row_num,], ytrain[:row_num], likelihood_var
+            W, x_seen, y_seen, likelihood_var
         )
         contour_plot(likelihood_func_with_data, actual_weights)
 
         # plot updated posterior on points seen till now
-        x_seen = xtrain[:row_num]
-        y_seen = ytrain[:row_num]
         mu, cov = get_posterior_params(x_seen, y_seen, prior, likelihood_var)
-        posterior_distr = multivariate_normal(mu.T.tolist()[0], cov)
+        posterior_distr = multivariate_normal(mean=mu, cov=cov)
         posterior_func = lambda x: posterior_distr.pdf(x)
         plt.subplot(num_rows, num_cols, first_column_pos + 1)
         contour_plot(posterior_func, actual_weights)
@@ -86,9 +84,6 @@ def make_plots(
         plt.subplot(num_rows, num_cols, first_column_pos + 3)
         post_mean, post_var = get_posterior_params(x_seen, y_seen, prior)
         plot_predictive_distribution(get_predictive_params, post_mean, post_var)
-
-    # #show the final plot
-    plt.show()
 
 
 def plot_without_seeing_data(prior, num_rows, num_cols):
@@ -105,7 +100,7 @@ def plot_without_seeing_data(prior, num_rows, num_cols):
 
     # Prior
     prior_distribution = multivariate_normal(
-        mean=prior["mean"].T.tolist()[0], cov=prior["var"]
+        mean=prior["mean"].tolist(), cov=prior["var"]
     )
     prior_func = lambda x: prior_distribution.pdf(x)
     plt.subplot(num_rows, num_cols, 2)
@@ -134,9 +129,8 @@ def contour_plot(distribution_func, actual_weights=[]):
     array = np.arange(-1, 1, step_size)
     x, y_train = np.meshgrid(array, array)
 
-    length = x.shape[0] * x.shape[1]
-    x_flat = x.reshape((length, 1))
-    y_flat = y_train.reshape((length, 1))
+    x_flat = x.reshape((x.size, 1))
+    y_flat = y_train.reshape((y_train.size, 1))
     contour_points = np.c_[x_flat, y_flat]
 
     values = list(map(distribution_func, contour_points))
@@ -161,13 +155,11 @@ def contour_plot(distribution_func, actual_weights=[]):
 def plot_sample_lines(mean, variance, number_of_lines=6, data_points=np.empty((0, 0))):
     step_size = 0.05
     # generate and plot lines
-    for round in range(1, number_of_lines):
-        weights = np.matrix(
-            np.random.multivariate_normal(mean.T.tolist()[0], variance)
-        ).T
+    for _ in range(1, number_of_lines):
+        weights = np.random.multivariate_normal(mean, variance).T
         x1 = np.arange(-1, 1, step_size)
-        x = np.matrix(np.c_[np.ones((len(x1), 1)), x1])
-        y_train = x * weights
+        x = np.c_[ones((len(x1), 1)), x1]
+        y_train = x.dot(weights)
 
         plt.plot(x1, y_train)
 
@@ -187,9 +179,9 @@ def plot_sample_lines(mean, variance, number_of_lines=6, data_points=np.empty((0
 def plot_predictive_distribution(get_predictive_params, post_mean, post_var):
     step_size = 0.05
     x = np.arange(-1, 1, step_size)
-    x = np.matrix(np.c_[np.ones((len(x), 1)), x])
-    pred_means = np.zeros(x.shape[0])
-    pred_stds = np.zeros(x.shape[0])
+    x = np.c_[ones((len(x), 1)), x]
+    pred_means = zeros(x.shape[0])
+    pred_stds = zeros(x.shape[0])
     for i in range(x.shape[0]):
         pred_means[i], pred_stds[i] = get_predictive_params(
             x[i,].T, post_mean, post_var

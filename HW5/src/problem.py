@@ -1,5 +1,4 @@
 import matplotlib.pyplot as plt
-import numpy.matlib as matlib
 from scipy.stats import multivariate_normal
 import numpy as np
 import support_code
@@ -16,13 +15,13 @@ def likelihood_func(w, X, y_train, likelihood_var):
         y_train: Training response vector (np.matrix)
         likelihood_var: likelihood variance
 
-    Returns:
+    Retrns:
         likelihood: Data likelihood (float)
     """
-    normalizer = 1 / np.sqrt(2 * np.pi * likelihood_var)
-    zscore = (y_train - X * w) / np.sqrt(likelihood_var)
+    frozen = multivariate_normal(mean=y_train, cov=likelihood_var)
+    yhat = X.dot(w)
 
-    return np.exp(-0.5 * np.square(zscore)) / normalizer
+    return frozen.pdf(yhat)
 
 
 def get_posterior_params(X, y_train, prior, likelihood_var=0.2 ** 2):
@@ -44,8 +43,12 @@ def get_posterior_params(X, y_train, prior, likelihood_var=0.2 ** 2):
         post_mean: Posterior mean (np.matrix)
         post_var: Posterior mean (np.matrix)
     """
-
-    # TO DO
+    z = X.T.dot(y_train)
+    hermitian_square = X.T.dot(X)
+    prior_precision = np.linalg.inv(prior["var"])
+    A = hermitian_square + likelihood_var * prior_precision
+    post_mean = np.linalg.lstsq(A, z, rcond=None)[0]
+    post_var = np.linalg.inv(1 / likelihood_var * hermitian_square + prior_precision)
 
     return post_mean, post_var
 
@@ -66,8 +69,8 @@ def get_predictive_params(X_new, post_mean, post_var, likelihood_var=0.2 ** 2):
         - pred_mean: Mean of predictive distribution
         - pred_var: Variance of predictive distribution
     """
-
-    # TO DO
+    pred_mean = X_new.dot(post_mean)
+    pred_var = (X_new.T).dot(post_var.dot(X_new)) + likelihood_var
 
     return pred_mean, pred_var
 
@@ -81,7 +84,7 @@ if __name__ == "__main__":
     """
 
     np.random.seed(46134)
-    actual_weights = np.matrix([[0.3], [0.5]])
+    actual_weights = np.array([0.3, 0.5])
     data_size = 40
     noise = {"mean": 0, "var": 0.2 ** 2}
     likelihood_var = noise["var"]
@@ -89,9 +92,8 @@ if __name__ == "__main__":
 
     # Question (b)
     sigmas_to_test = [1 / 2, 1 / (2 ** 5), 1 / (2 ** 10)]
-    for sigma_squared in sigmas_to_test:
-        prior = {"mean": np.matrix([[0], [0]]), "var": matlib.eye(2) * sigma_squared}
-
+    for variance in sigmas_to_test:
+        prior = {"mean": np.zeros(2), "var": np.identity(2) * variance}
         support_code.make_plots(
             actual_weights,
             xtrain,
@@ -102,3 +104,4 @@ if __name__ == "__main__":
             get_posterior_params,
             get_predictive_params,
         )
+        plt.savefig("../imgs/bayesian_linear_regression_{0:.2E}.jpg".format(variance))
