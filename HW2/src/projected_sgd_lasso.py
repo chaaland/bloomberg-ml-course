@@ -1,12 +1,15 @@
-import numpy as np 
+import numpy as np
 import pdb
 from numpy import zeros, ones
 
-def projected_batch_grad_desc_lasso(X, y, theta_init=None, alpha=0.1, lambda_reg=1, num_iter=1000):
+
+def projected_batch_grad_desc_lasso(
+    X, y, theta_init=None, alpha=0.1, lambda_reg=1, num_iter=1000
+):
     _, num_features = X.shape
-    
+
     if theta_init is None:
-        theta_pos = 0.1 * np.random.randn(num_features) 
+        theta_pos = 0.1 * np.random.randn(num_features)
         theta_neg = 0.1 * np.random.randn(num_features)
     else:
         theta_pos = theta_init.clip(min=0)
@@ -14,23 +17,23 @@ def projected_batch_grad_desc_lasso(X, y, theta_init=None, alpha=0.1, lambda_reg
 
     eta0 = 0.00005
     if isinstance(alpha, float):
-        alpha_func = lambda x : alpha
-    elif alpha == 'inv':
-        alpha_func = lambda x: eta0/x
-    elif alpha == 'invsqrt':
-        alpha_func = lambda x: eta0/np.sqrt(x)
+        alpha_func = lambda x: alpha
+    elif alpha == "inv":
+        alpha_func = lambda x: eta0 / x
+    elif alpha == "invsqrt":
+        alpha_func = lambda x: eta0 / np.sqrt(x)
     else:
-        raise ValueError(str) 
+        raise ValueError(str)
     loss_hist = zeros(num_iter)
     theta_hist = zeros((num_iter, num_features))
 
     for i in range(num_iter):
-        
+
         theta = theta_pos - theta_neg
         r = X.dot(theta) - y
-        theta_pos_grad_step =  2 * np.dot(X.T, r) + lambda_reg * ones(num_features)
+        theta_pos_grad_step = 2 * np.dot(X.T, r) + lambda_reg * ones(num_features)
         theta_neg_grad_step = -2 * np.dot(X.T, r) + lambda_reg * ones(num_features)
-        a = alpha_func(i+1)
+        a = alpha_func(i + 1)
 
         # take gradient step
         theta_pos = theta_pos - a * theta_pos_grad_step
@@ -40,9 +43,9 @@ def projected_batch_grad_desc_lasso(X, y, theta_init=None, alpha=0.1, lambda_reg
         theta_pos = np.maximum(theta_pos, np.zeros_like(theta_pos))
         theta_neg = np.maximum(theta_neg, np.zeros_like(theta_neg))
 
-        theta_hist[i,:] = theta_pos - theta_neg
-        regularization_loss = np.linalg.norm(theta_hist[i,:], ord=1)
-        data_loss = compute_square_loss(X, y, theta_hist[i,:])
+        theta_hist[i, :] = theta_pos - theta_neg
+        regularization_loss = np.linalg.norm(theta_hist[i, :], ord=1)
+        data_loss = compute_square_loss(X, y, theta_hist[i, :])
         loss_hist[i] = data_loss + lambda_reg * regularization_loss
 
     return theta_hist, loss_hist
@@ -75,7 +78,7 @@ def projected_sgd_lasso(X, y, theta_init=None, alpha=0.1, lambda_reg=1, num_iter
 
     num_instances, num_features = X.shape
     if theta_init is None:
-        theta_pos = 0.1 * np.random.randn(num_features) 
+        theta_pos = 0.1 * np.random.randn(num_features)
         theta_neg = 0.1 * np.random.randn(num_features)
     else:
         theta_pos = theta_init.clip(min=0)
@@ -90,9 +93,9 @@ def projected_sgd_lasso(X, y, theta_init=None, alpha=0.1, lambda_reg=1, num_iter
     for i in range(num_iter):
         np.random.shuffle(indices)
         for j, index in enumerate(indices):
-            x = X[index,:]
+            x = X[index, :]
             theta = theta_pos - theta_neg
-            residual = np.dot(x, theta) - y[index] 
+            residual = np.dot(x, theta) - y[index]
             theta_pos_sgd_step = 2 * residual * x + lambda_reg * ones(num_features)
             theta_neg_sgd_step = -2 * residual * x + lambda_reg * ones(num_features)
 
@@ -105,12 +108,13 @@ def projected_sgd_lasso(X, y, theta_init=None, alpha=0.1, lambda_reg=1, num_iter
             theta_neg = np.maximum(theta_neg, np.zeros_like(theta_neg))
             cnt += 1
 
-        theta_hist[i,:] = (theta_pos - theta_neg)
-        regularization_loss = np.linalg.norm(theta_hist[i,:], ord=1)
-        data_loss = compute_square_loss(X, y, theta_hist[i,:])
+        theta_hist[i, :] = theta_pos - theta_neg
+        regularization_loss = np.linalg.norm(theta_hist[i, :], ord=1)
+        data_loss = compute_square_loss(X, y, theta_hist[i, :])
         loss_hist[i] = data_loss + lambda_reg * regularization_loss
 
     return theta_hist, loss_hist
+
 
 def compute_square_loss(X, y, theta):
     return np.sum(np.square(X.dot(theta) - y))
