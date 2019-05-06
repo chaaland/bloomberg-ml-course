@@ -1,3 +1,8 @@
+import numpy as np 
+from sklearn.base import BaseEstimator
+from sklearn.tree import DecisionTreeRegressor
+
+
 class GradientBoosting:
     """Gradient Boosting regressor class
 
@@ -25,18 +30,59 @@ class GradientBoosting:
         self.learning_rate = learning_rate
         self.min_sample = min_sample
         self.max_depth = max_depth
+        self._additive_models = []
 
-    def fit(self, train_data, train_target):
+
+    def fit(self, X, y):
         """Fit gradient boosting model
 
         :param train_data:
         :param train_target:
         """
-        # Your code goes here
+        base_model = BaseLearner().fit(X, y)
+        self._additive_models.append(base_model)
 
-    def predict(self, test_data):
+        for i in range(self.n_estimator):
+            curr_model = self._additive_models[i]
+            neg_l2_grads = y - curr_model.predict(X)
+            next_model = DecisionTreeRegressor(min_samples_leaf=self.min_sample, max_depth=self.max_depth)
+            # how to do curr_model + learning_rate * next_model??
+            self._additive_models.append(next_model.fit(X, neg_l2_grads))
+        
+        return self
+
+
+    def predict(self, X):
         """Predict value
 
-        :param test_data:
+        :param X:
         """
-        # Your code goes here
+        model = self._additive_models[-1]
+        return model.predict(X)
+
+
+
+class BaseLearner(BaseEstimator):
+    def __init__(self):
+        pass
+
+    def fit(self, X, y):
+        """
+        :param X: design matrix
+        :param y: label examples
+        :return: self
+        """
+        self._mean_y = np.mean(y)
+        return self
+
+    def predict(self, X):
+        """Predict the mean
+
+        :param X: 2d numpy array of training data
+        :return: 
+        """
+        if hasattr(self, "_mean_y"):
+            n, _ = X.shape
+            return self._mean_y * np.ones(n)
+        raise AttributeError("The 'fit' method of BaseLearner must be called before 'predict'")
+

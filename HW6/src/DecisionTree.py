@@ -2,9 +2,7 @@ import matplotlib.pyplot as plt
 from itertools import product
 import numpy as np
 from collections import Counter
-from sklearn.base import BaseEstimator, RegressorMixin, ClassifierMixin
-from sklearn.tree import DecisionTreeClassifier, DecisionTreeRegressor, export_graphviz
-import graphviz
+from sklearn.base import BaseEstimator
 
 
 class DecisionTree(BaseEstimator):

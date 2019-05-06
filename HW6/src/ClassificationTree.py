@@ -2,15 +2,13 @@ import matplotlib.pyplot as plt
 from itertools import product
 import numpy as np
 from collections import Counter
-from sklearn.base import BaseEstimator, RegressorMixin, ClassifierMixin
-from sklearn.tree import DecisionTreeClassifier, DecisionTreeRegressor, export_graphviz
-import graphviz
+from sklearn.base import BaseEstimator, ClassifierMixin
 
 from DecisionTree import DecisionTree
 from utils import compute_entropy, compute_gini, most_common_label
 
 
-class ClassificationTree(BaseEstimator, ClassifierMixin):
+class ClassificationTree(BaseEstimator):
 
     loss_function_dict = {"entropy": compute_entropy, "gini": compute_gini}
 
@@ -29,7 +27,7 @@ class ClassificationTree(BaseEstimator, ClassifierMixin):
             max_depth,
         )
 
-    def fit(self, X, y=None):
+    def fit(self, X, y):
         self.tree.fit(X, y)
         return self
 
