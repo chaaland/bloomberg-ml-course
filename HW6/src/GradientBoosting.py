@@ -1,9 +1,17 @@
-class GradientBoosting():
+class GradientBoosting:
     """
     Gradient Boosting regressor class
     :method fit: fitting model
     """
-    def __init__(self, n_estimator, pseudo_residual_func, learning_rate=0.1, min_sample=5, max_depth=3):
+
+    def __init__(
+        self,
+        n_estimator,
+        pseudo_residual_func,
+        learning_rate=0.1,
+        min_sample=5,
+        max_depth=3,
+    ):
         """
         Initialize gradient boosting class
         
@@ -16,13 +24,13 @@ class GradientBoosting():
         self.learning_rate = learning_rate
         self.min_sample = min_sample
         self.max_depth = max_depth
-    
+
     def fit(self, train_data, train_target):
         """
         Fit gradient boosting model
         """
-        # Your code goes here 
-    
+        # Your code goes here
+
     def predict(self, test_data):
         """
         Predict value

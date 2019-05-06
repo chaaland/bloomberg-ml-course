@@ -8,13 +8,12 @@ import graphviz
 
 
 class DecisionTree(BaseEstimator):
-     
     def __init__(
-        self, 
-        split_loss_function, 
+        self,
+        split_loss_function,
         leaf_value_estimator,
-        depth=0, 
-        min_sample=5, 
+        depth=0,
+        min_sample=5,
         max_depth=10,
     ):
         """Initialize the decision tree classifier
@@ -30,7 +29,6 @@ class DecisionTree(BaseEstimator):
         self.depth = depth
         self.min_sample = min_sample
         self.max_depth = max_depth
-
 
     def fit(self, X, y):
         """Fit the decision tree in place
@@ -58,7 +56,7 @@ class DecisionTree(BaseEstimator):
             self.is_leaf = False
             best_feature, best_score = 0, np.inf
             for feature in range(m):
-                values = X[:,feature]
+                values = X[:, feature]
                 sort_indices = np.argsort(values)
                 sorted_values = values[sort_indices]
                 sorted_labels = y[sort_indices]
@@ -67,8 +65,8 @@ class DecisionTree(BaseEstimator):
                     y_l, y_r = sorted_labels[:i], sort_indices[i:]
                     l_split_val = self.split_loss_function(y_l)
                     r_split_val = self.split_loss_function(y_r)
-                    node_split_val = i / n * l_split_val  + (1 - i / n) * r_split_val
-                    
+                    node_split_val = i / n * l_split_val + (1 - i / n) * r_split_val
+
                     if node_split_val < best_score:
                         best_score = node_split_val
                         best_feature = feature
@@ -77,25 +75,25 @@ class DecisionTree(BaseEstimator):
             self.split_id = best_feature
             self.split_value = best_split_val
             self.left = DecisionTree(
-                self.split_loss_function, 
+                self.split_loss_function,
                 self.leaf_value_estimator,
-                depth=self.depth+1, 
+                depth=self.depth + 1,
                 min_sample=self.min_sample,
                 max_depth=self.max_depth,
             )
             self.right = DecisionTree(
-                self.split_loss_function, 
+                self.split_loss_function,
                 self.leaf_value_estimator,
-                depth=self.depth+1, 
+                depth=self.depth + 1,
                 min_sample=self.min_sample,
                 max_depth=self.max_depth,
             )
-            mask = X[:,self.split_value] < self.split_value
+            mask = X[:, self.split_value] < self.split_value
             X_l, y_l = X[mask], y[mask]
             X_r, y_r = X[~mask], y[~mask]
             self.left.fit(X_l, y_r)
             self.right.fit(X_r, y_l)
-        
+
         return self
 
     def predict_instance(self, instance):

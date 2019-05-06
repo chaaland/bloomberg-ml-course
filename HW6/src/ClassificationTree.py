@@ -9,12 +9,10 @@ import graphviz
 from DecisionTree import DecisionTree
 from utils import compute_entropy, compute_gini, most_common_label
 
+
 class ClassificationTree(BaseEstimator, ClassifierMixin):
 
-    loss_function_dict = {
-        "entropy": compute_entropy,
-        "gini": compute_gini,
-    }
+    loss_function_dict = {"entropy": compute_entropy, "gini": compute_gini}
 
     def __init__(self, loss_function="entropy", min_sample=5, max_depth=10):
         """
@@ -26,13 +24,13 @@ class ClassificationTree(BaseEstimator, ClassifierMixin):
         self.tree = DecisionTree(
             self.loss_function_dict[loss_function],
             most_common_label,
-            0, 
-            min_sample, 
+            0,
+            min_sample,
             max_depth,
         )
 
     def fit(self, X, y=None):
-        self.tree.fit(X,y)
+        self.tree.fit(X, y)
         return self
 
     def predict_instance(self, instance):

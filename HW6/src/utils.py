@@ -1,6 +1,7 @@
 from collections import Counter
 import numpy as np
 
+
 def compute_entropy(label_array):
     """Calulate the entropy of given label list
     
@@ -50,6 +51,7 @@ def mean_absolute_deviation_around_median(y):
     mae = np.mean(np.abs(y_centered))
 
     return mae
+
 
 def pseudo_residual_L2(train_target, train_predict):
     """Compute the pseudo-residual for half the L2 norm based on 
