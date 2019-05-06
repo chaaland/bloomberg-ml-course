@@ -4,7 +4,7 @@ import numpy as np
 def compute_entropy(label_array):
     """Calulate the entropy of given label list
     
-    :param label_array: a numpy array of labels shape = (n, 1)
+    :param label_array: a numpy array of labels shape = (n,)
     :return: entropy value
     """
     n_elems = label_array.size

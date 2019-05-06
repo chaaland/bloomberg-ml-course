@@ -6,22 +6,30 @@ from sklearn.base import BaseEstimator, RegressorMixin, ClassifierMixin
 from sklearn.tree import DecisionTreeClassifier, DecisionTreeRegressor, export_graphviz
 import graphviz
 
+from DecisionTree import DecisionTree
+from utils import compute_entropy, compute_gini, most_common_label
 
 class ClassificationTree(BaseEstimator, ClassifierMixin):
 
     loss_function_dict = {
-        'entropy': compute_entropy,
-        'gini': compute_gini
+        "entropy": compute_entropy,
+        "gini": compute_gini,
     }
 
-    def __init__(self, loss_function='entropy', min_sample=5, max_depth=10):
-        '''
+    def __init__(self, loss_function="entropy", min_sample=5, max_depth=10):
+        """
         :param loss_function(str): loss function for splitting internal node
-        '''
+        :param min_sample: minimum number of data points in a leaf
+        :param max_depth: maximum depth the tree can grow
+        """
 
-        self.tree = Decision_Tree(self.loss_function_dict[loss_function],
-                                most_common_label,
-                                0, min_sample, max_depth)
+        self.tree = DecisionTree(
+            self.loss_function_dict[loss_function],
+            most_common_label,
+            0, 
+            min_sample, 
+            max_depth,
+        )
 
     def fit(self, X, y=None):
         self.tree.fit(X,y)
