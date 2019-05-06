@@ -49,11 +49,10 @@ class DecisionTree(BaseEstimator):
         :return: self
         """
         n, m = X.shape
-        if self.depth == self.max_depth or self.min_sample >= n:
+        if self.depth == self.max_depth or n <= self.min_sample:
             self.is_leaf = True
             self.value = self.leaf_value_estimator(y)
         else:
-            self.is_leaf = False
             best_feature, best_score = 0, np.inf
             for feature in range(m):
                 values = X[:, feature]
@@ -89,10 +88,17 @@ class DecisionTree(BaseEstimator):
                 max_depth=self.max_depth,
             )
             mask = X[:, self.split_value] < self.split_value
-            X_l, y_l = X[mask], y[mask]
-            X_r, y_r = X[~mask], y[~mask]
-            self.left.fit(X_l, y_r)
-            self.right.fit(X_r, y_l)
+            n_l = np.sum(mask)
+            n_r = n - n_l
+            if n_l < self.min_sample or n_r < self.min_sample:
+                self.is_leaf = True
+                self.value = self.leaf_value_estimator(y)
+            else: 
+                self.is_leaf = False
+                X_l, y_l = X[mask], y[mask]
+                X_r, y_r = X[~mask], y[~mask]
+                self.left.fit(X_l, y_r)
+                self.right.fit(X_r, y_l)
 
         return self
 
