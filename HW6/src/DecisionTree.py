@@ -3,7 +3,7 @@ from itertools import product
 import numpy as np
 from collections import Counter
 from sklearn.base import BaseEstimator
-from .utils import compute_entropy, compute_gini, most_common_label, mean_absolute_deviation_around_median
+from utils import compute_entropy, compute_gini, most_common_label, mean_absolute_deviation_around_median
 
 
 class DecisionTree(BaseEstimator):
@@ -56,12 +56,13 @@ class DecisionTree(BaseEstimator):
         best_split_feature, best_split_score = 0, np.inf
         for feature in range(n_features):
             values = X[:, feature]
+            # import pdb; pdb.set_trace()
             sort_indices = np.argsort(values)
             sorted_values = values[sort_indices]
             sorted_labels = y[sort_indices]
             _, unique_indexes = np.unique(sorted_values, return_index=True)
-            for i in range(unique_indexes):
-                y_l, y_r = sorted_labels[:i], sort_indices[i:]
+            for i in unique_indexes:
+                y_l, y_r = sorted_labels[:i], sorted_labels[i:]
                 l_split_val = self.split_loss_function(y_l)
                 r_split_val = self.split_loss_function(y_r)
                 node_split_score = i / n_data * l_split_val + (1 - i / n_data) * r_split_val
@@ -100,8 +101,8 @@ class DecisionTree(BaseEstimator):
             min_sample=self.min_sample,
             max_depth=self.max_depth,
         )
-        self.left.fit(X_l, y_r)
-        self.right.fit(X_r, y_l)
+        self.left.fit(X_l, y_l)
+        self.right.fit(X_r, y_r)
 
         return self
 

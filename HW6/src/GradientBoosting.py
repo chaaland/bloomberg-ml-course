@@ -13,9 +13,9 @@ class GradientBoosting:
         self,
         n_estimator,
         pseudo_residual_func,
-        learning_rate=0.1,
-        min_sample=5,
-        max_depth=3,
+        learning_rate: float=0.1,
+        min_sample: int=5,
+        max_depth: int=3,
     ):
         """Initialize gradient boosting class
         

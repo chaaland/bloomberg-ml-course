@@ -9,10 +9,12 @@ def compute_entropy(label_array):
     :return: entropy value
     """
     n_elems = label_array.size
+    if n_elems == 0:
+        return 0.0
     _, elem_counts = np.unique(label_array, return_counts=True)
     probs = elem_counts / n_elems
 
-    return -probs * np.log2(probs + 1e-7)
+    return -np.sum(probs * np.log2(probs + 1e-7))
 
 
 def compute_gini(label_array):
@@ -22,10 +24,12 @@ def compute_gini(label_array):
     :return: gini index value
     """
     n_elems = label_array.size
+    if n_elems == 0:
+        return 0.0
     _, elem_counts = np.unique(label_array, return_counts=True)
     probs = elem_counts / n_elems
 
-    return 1 - np.sum(probs)
+    return 1 - np.sum(np.square(probs))
 
 
 def most_common_label(y):
