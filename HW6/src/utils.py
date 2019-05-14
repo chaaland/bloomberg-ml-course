@@ -62,3 +62,59 @@ def pseudo_residual_L2(train_target, train_predict):
     :return: pseudo-residual of the l2 norm
     """
     return train_target - train_predict
+
+
+def zero_one(y: np.ndarray, a: np.ndarray):
+    """Computes the zero-one loss
+    
+    :param y: output class
+    :param a: predicted class
+    :return: 1 if different, 0 if same
+    """
+    return int(y != a)
+
+
+def feature_map(X, y, n_classes: int):
+    """Computes the class-sensitive features
+    
+    :param X: array-like, shape = [n_samples, n_in] or [n_in,], input features for input data
+    :param y: a target class (in range 0,..,n_classes - 1)
+    :param n_classes: number of target classes
+    :return: array-like, shape = [n_samples, n_out], the class sensitive features for class y
+    """
+    n_samples, n_in = (1, X.size) if X.ndim == 1 else X.shape
+    n_out = n_classes * n_in
+    psi = np.zeros((n_samples, n_out))
+
+    if n_samples == 1:
+        start_index = y * n_in
+        end_index = start_index + n_in
+        psi[0, start_index:end_index] = X
+    else:
+        for i in range(n_samples):
+            start_index = y[i] * n_in
+            end_index = start_index + n_in
+            psi[i, start_index:end_index] = X[i, :]
+    return psi
+
+
+def sgd(X, y, n_out: int, subgd, eta: float = 0.1, epochs: int = 1000):
+    """Runs subgradient descent, and outputs resulting parameter vector
+    
+    :param X: array-like, shape = [n_samples, n_features], input training data 
+    :param y: array-like, shape = [n_samples,], class labels
+    :param n_out: number of class-sensitive features
+    :param subgd: function taking x,y and giving subgradient of objective
+    :param eta: learning rate for SGD
+    :param T: maximum number of iterations
+    :return: vector of weights
+    """
+    n_samples, _ = X.shape
+    weights = np.zeros(n_out)
+
+    indices = np.arange(n_samples)
+    for i in range(epochs):
+        np.random.shuffle(indices)
+        for j in indices:
+            weights -= eta * subgd(X[j, :], y[j], weights)
+    return weights
