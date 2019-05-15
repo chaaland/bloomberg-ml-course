@@ -4,6 +4,7 @@ import numpy as np
 from collections import Counter
 from sklearn.base import BaseEstimator
 from utils import compute_entropy, compute_gini, most_common_label, mean_absolute_deviation_around_median
+from sklearn.exceptions import NotFittedError
 
 
 class DecisionTree(BaseEstimator):
@@ -28,6 +29,7 @@ class DecisionTree(BaseEstimator):
         self.depth = depth
         self.min_sample = min_sample
         self.max_depth = max_depth
+        self.is_fit = False
 
     def fit(self, X, y):
         """Fit the decision tree in place
@@ -48,6 +50,7 @@ class DecisionTree(BaseEstimator):
         :return: self
         """
         n_data, n_features = X.shape
+        self.is_fit = True
         if self.depth == self.max_depth or n_data <= self.min_sample:
             self.is_leaf = True
             self.value = self.leaf_value_estimator(y)
@@ -56,7 +59,6 @@ class DecisionTree(BaseEstimator):
         best_split_feature, best_split_score = 0, np.inf
         for feature in range(n_features):
             values = X[:, feature]
-            # import pdb; pdb.set_trace()
             sort_indices = np.argsort(values)
             sorted_values = values[sort_indices]
             sorted_labels = y[sort_indices]
@@ -107,14 +109,17 @@ class DecisionTree(BaseEstimator):
         return self
 
     def predict_instance(self, instance):
-        """ Predict label by decision tree
+        """Predict label by decision tree
 
         :param instance: numpy array with new data, shape (1, m)
         :return: whatever is returned by leaf_value_estimator for leaf containing instance
         """
-        if self.is_leaf:
+        if not self.is_fit:
+            raise NotFittedError(f"This {self.__class__.__name__} instance is not fitted yet. "
+                "Call 'fit' with appropriate arguments before using this method.") 
+        elif self.is_leaf:
             return self.value
-        if instance[self.split_id] <= self.split_value:
+        elif instance[self.split_id] <= self.split_value:
             return self.left.predict_instance(instance)
         else:
             return self.right.predict_instance(instance)

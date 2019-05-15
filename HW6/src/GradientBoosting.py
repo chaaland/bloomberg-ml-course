@@ -1,9 +1,10 @@
-import numpy as np 
+import numpy as np
 from sklearn.base import BaseEstimator
 from sklearn.tree import DecisionTreeRegressor
+from sklearn.exceptions import NotFittedError
 
 
-class GradientBoosting:
+class GradientBoosting(BaseEstimator):
     """Gradient Boosting regressor class
 
     :method fit: fitting model
@@ -13,9 +14,9 @@ class GradientBoosting:
         self,
         n_estimator,
         pseudo_residual_func,
-        learning_rate: float=0.1,
-        min_sample: int=5,
-        max_depth: int=3,
+        learning_rate: float = 0.1,
+        min_sample: int = 5,
+        max_depth: int = 3,
     ):
         """Initialize gradient boosting class
         
@@ -32,34 +33,43 @@ class GradientBoosting:
         self.max_depth = max_depth
         self._additive_models = []
 
-
     def fit(self, X, y):
         """Fit gradient boosting model
 
         :param train_data:
         :param train_target:
         """
-        base_model = BaseLearner().fit(X, y)
-        self._additive_models.append(base_model)
+        self._additive_models = []
+        self.base_model = BaseLearner()
+        self.base_model.fit(X, y)
+        preds = self.base_model.predict(X)
 
-        for i in range(self.n_estimator):
-            curr_model = self._additive_models[i]
-            neg_l2_grads = y - curr_model.predict(X)
-            next_model = DecisionTreeRegressor(min_samples_leaf=self.min_sample, max_depth=self.max_depth)
-            # how to do curr_model + learning_rate * next_model??
-            self._additive_models.append(next_model.fit(X, neg_l2_grads))
-        
+        for _ in range(self.n_estimator):
+            neg_grads = self.pseudo_residual_func(y, preds)
+            next_model = DecisionTreeRegressor(
+                min_samples_leaf=self.min_sample, max_depth=self.max_depth
+            )
+            next_model.fit(X, neg_grads)
+            preds += self.learning_rate * next_model.predict(X)
+            self._additive_models.append(next_model)
+
         return self
-
 
     def predict(self, X):
         """Predict value
 
         :param X:
         """
-        model = self._additive_models[-1]
-        return model.predict(X)
+        if not hasattr(self, "_additive_models"):
+            raise NotFittedError(
+                f"This {self.__class__.__name__} instance is not fitted yet. "
+                "Call 'fit' with appropriate arguments before using this method."
+            )
+        preds = self.base_model.predict(X)
+        for model in self._additive_models:
+            preds += self.learning_rate * model.predict(X)
 
+        return preds
 
 
 class BaseLearner(BaseEstimator):
@@ -81,8 +91,11 @@ class BaseLearner(BaseEstimator):
         :param X: 2d numpy array of training data
         :return: 
         """
-        if hasattr(self, "_mean_y"):
-            n, _ = X.shape
-            return self._mean_y * np.ones(n)
-        raise AttributeError("The 'fit' method of BaseLearner must be called before 'predict'")
+        if not hasattr(self, "_mean_y"):
+            raise NotFittedError(
+                f"This {self.__class__.__name__} instance is not fitted yet. "
+                "Call 'fit' with appropriate arguments before using this method."
+            )
 
+        n, _ = X.shape
+        return self._mean_y * np.ones(n)
