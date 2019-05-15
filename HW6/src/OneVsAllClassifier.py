@@ -1,4 +1,5 @@
 import numpy as np
+from sklearn.exceptions import NotFittedError
 from sklearn.base import BaseEstimator, ClassifierMixin, clone
 
 
@@ -19,7 +20,7 @@ class OneVsAllClassifier(BaseEstimator, ClassifierMixin):
         """
         self.n_classes = n_classes
         self.estimators = [clone(estimator) for _ in range(n_classes)]
-        self.fitted = False
+        self.is_fit = False
 
     def fit(self, X, y=None):
         """This should fit one classifier for each class.
@@ -32,7 +33,7 @@ class OneVsAllClassifier(BaseEstimator, ClassifierMixin):
         for i, estimator in enumerate(self.estimators):
             z = 2.0 * (y == i) - 1.0
             estimator.fit(X, z)
-        self.fitted = True
+        self.is_fit = True
         return self
 
     def decision_function(self, X):
@@ -44,9 +45,9 @@ class OneVsAllClassifier(BaseEstimator, ClassifierMixin):
         :param X: array-like, shape = [n_samples, n_features] input data
         :return: array-like, shape = [n_samples, n_classes]
         """
-        if not self.fitted:
-            raise RuntimeError("You must train classifer before predicting data.")
-
+        if not self.is_fit:
+            raise NotFittedError(f"This {self.__class__.__name__} instance is not fitted yet. "
+                "Call 'fit' with appropriate arguments before using this method.") 
         if not hasattr(self.estimators[0], "decision_function"):
             raise AttributeError(
                 "Base estimator doesn't have a decision_function attribute."

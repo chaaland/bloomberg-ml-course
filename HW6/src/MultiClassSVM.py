@@ -1,5 +1,6 @@
 import numpy as np
 from sklearn.base import BaseEstimator, ClassifierMixin
+from sklearn.exceptions import NotFittedError
 from utils import zero_one, feature_map, sgd
 
 
@@ -27,7 +28,7 @@ class MulticlassSVM(BaseEstimator, ClassifierMixin):
         self.n_classes = n_classes
         self.delta = delta
         self.psi = lambda X, y: psi(X, y, n_classes)
-        self.fitted = False
+        self.is_fit = False
 
     def subgradient(self, x, y, w):
         """Computes the subgradient at a given data point x,y
@@ -58,7 +59,7 @@ class MulticlassSVM(BaseEstimator, ClassifierMixin):
         :return: self
         """
         self.coef_ = sgd(X, y, self.n_out, self.subgradient, eta, epochs)
-        self.fitted = True
+        self.is_fit = True
         return self
 
     def decision_function(self, X):
@@ -68,8 +69,9 @@ class MulticlassSVM(BaseEstimator, ClassifierMixin):
         :param X : array-like, shape = [n_samples, n_in]
         :return: array-like, shape = [n_samples, n_classes] giving scores for each sample,class pairing
         """
-        if not self.fitted:
-            raise RuntimeError("You must train classifer before predicting data.")
+        if not self.is_fit:
+            raise NotFittedError(f"This {self.__class__.__name__} instance is not fitted yet. "
+                "Call 'fit' with appropriate arguments before using this method.")         
         W = self.coef_.reshape((self.n_classes, -1)).T
         return X @ W
 
