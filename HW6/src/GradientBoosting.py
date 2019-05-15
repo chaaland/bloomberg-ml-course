@@ -88,7 +88,8 @@ class BaseLearner(BaseEstimator):
         :return: 
         """
         if not hasattr(self, "_mean_y"):
-            raise NotFittedError("The 'fit' method of BaseLearner must be called before 'predict'")
+            raise NotFittedError(f"This {self.__class__.__name__} instance is not fitted yet. "
+                "Call 'fit' with appropriate arguments before using this method.")
 
         n, _ = X.shape
         return self._mean_y * np.ones(n)
