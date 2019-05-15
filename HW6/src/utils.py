@@ -67,6 +67,26 @@ def pseudo_residual_L2(train_target, train_predict):
     """
     return train_target - train_predict
 
+def sigmoid(x):
+    """Numerically-stable sigmoid function.
+
+    https://stackoverflow.com/questions/3985619/how-to-calculate-a-logistic-sigmoid-function-in-python
+    :param x:
+    """
+    z = np.exp(-x)
+    return 1 / (1 + z)
+
+
+def pseudo_residual_logistic(train_target, train_predict):
+    """Compute the pseudo-residual for half the L2 norm based on 
+    current predicted value
+
+    :param train_target:
+    :param train_predict:
+    :return: pseudo-residual of the l2 norm
+    """
+    return train_target * sigmoid(-train_target * train_predict)
+
 
 def zero_one(y: np.ndarray, a: np.ndarray):
     """Computes the zero-one loss
