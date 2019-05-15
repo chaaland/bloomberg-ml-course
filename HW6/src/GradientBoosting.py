@@ -61,8 +61,11 @@ class GradientBoosting(BaseEstimator):
         if not hasattr(self, "_additive_models"):
             raise NotFittedError(f"This {self.__class__.__name__} instance is not fitted yet. "
                 "Call 'fit' with appropriate arguments before using this method.")
-        model = self._additive_models[-1]
-        return model.predict(X)
+        n_rows, _ = X.shape
+        preds = np.zeros(n_rows)
+        for model in enumerate(self._additive_models):
+            preds += self.learning_rate * model.predict(X)
+        return preds
 
 
 class BaseLearner(BaseEstimator):
