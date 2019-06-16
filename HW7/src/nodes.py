@@ -190,13 +190,15 @@ class AffineNode(object):
         self.d_out = None
 
     def forward(self):
-        pass
+        self.out = np.dot(self.W.out, self.x.out) + self.b.out
+        self.d_out = np.zeros(self.out.shape)
+        return self.out
 
     def backward(self):
         pass
 
     def get_predecessors(self):
-        pass
+        return [self.x, self.W, self.b]
 
     ## TODO
 
@@ -223,3 +225,31 @@ class TanhNode(object):
 
     def get_predecessors(self):
         return [self.a]
+
+class SoftmaxNode(object):
+    """Node implementing affine transformation (W,x,b)-->Wx+b, where W is a matrix,
+    and x and b are vectors
+        :param W: node for which W.out is a numpy array of shape (m,d)
+        :param x: node for which x.out is a numpy array of shape (d)
+        :param b: node for which b.out is a numpy array of shape (m) (i.e. vector of length m)
+    """
+    def __init__(self, a, node_name):
+        self.a = a
+        self.node_name = node_name
+        self.out = None
+        self.d_out = None
+
+    def forward(self):
+        normalizer_offset = np.amax(self.a.out, axis=1, keepdims=True)
+        numerator = np.exp(self.a.out - normalizer_offset)
+        denominator = np.sum(numerator, axis=1, keepdims=True)
+        self.out = numerator / denominator
+        self.d_out = np.zeros(self.out.shape)
+        return self.out
+
+    def backward(self):
+        pass
+
+    def get_predecessors(self):
+        return [self.a]
+        
