@@ -181,6 +181,13 @@ class AffineNode(object):
         :param x: node for which x.out is a numpy array of shape (d)
         :param b: node for which b.out is a numpy array of shape (m) (i.e. vector of length m)
     """
+    def __init__(self, W, x, b, node_name):
+        self.W = W
+        self.x = x
+        self.b = b
+        self.node_name = node_name
+        self.out = None
+        self.d_out = None
 
     def forward(self):
         pass
@@ -198,13 +205,21 @@ class TanhNode(object):
     """Node tanh(a), where tanh is applied elementwise to the array a
         :param a: node for which a.out is a numpy array
     """
+    def __init__(self, a, node_name):
+        self.a = a
+        self.node_name = node_name
+        self.out = None
+        self.d_out = None
 
-    ## TODO
     def forward(self):
-        pass
+        self.out = np.tanh(self.a.out)
+        self.d_out = np.zeros(self.out.shape)
+        return self.out
 
     def backward(self):
-        pass
+        d_a = self.d_out * (1 - np.square(self.a.out))
+        self.a.d_out += d_a
+        return self.d_out
 
     def get_predecessors(self):
-        pass
+        return [self.a]
