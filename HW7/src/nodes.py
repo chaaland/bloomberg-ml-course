@@ -219,7 +219,7 @@ class TanhNode(object):
         return self.out
 
     def backward(self):
-        d_a = self.d_out * (1 - np.square(self.a.out))
+        d_a = self.d_out * (1 - np.square(self.out))
         self.a.d_out += d_a
         return self.d_out
 
