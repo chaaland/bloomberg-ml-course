@@ -128,20 +128,19 @@ class L2NormPenaltyNode(object):
         self.d_out = None
         self.l2_reg = np.array(l2_reg)
         self.w = w
-    
+
     def forward(self):
         self.out = self.l2_reg * np.linalg.norm(self.w.out)
         self.d_out = np.zeros(self.out.shape)
         return self.out
 
     def backward(self):
-        pass
+        d_w = self.d_out * (2 * self.l2_reg * self.w.out)
+        self.w.d_out += d_w
+        return self.d_out
 
     def get_predecessors(self):
         return [self.w]
-
-
-        ## TODO
 
 
 class SumNode(object):
@@ -153,16 +152,26 @@ class SumNode(object):
         :param b: node for which b.out is a numpy array of the same shape as a
         node_name: node's name (a string)
         """
-        ## TODO
+        self.a = a
+        self.b = b
+        self.node_name = node_name
+        self.out = None
+        self.d_out = None
+
     def forward(self):
-        pass
+        self.out = self.a.out + self.b.out
+        self.d_out = np.zeros(self.out.shape)
+        return self.out
 
     def backward(self):
-        pass
+        d_a = self.d_out * 1
+        d_b = self.d_out * 1
+        self.a.d_out += d_a
+        self.b.d_out += d_b
+        return self.d_out
 
     def get_predecessors(self):
-        pass
-
+        return [self.a, self.b]
 
 
 class AffineNode(object):
@@ -172,6 +181,7 @@ class AffineNode(object):
         :param x: node for which x.out is a numpy array of shape (d)
         :param b: node for which b.out is a numpy array of shape (m) (i.e. vector of length m)
     """
+
     def forward(self):
         pass
 
@@ -180,7 +190,6 @@ class AffineNode(object):
 
     def get_predecessors(self):
         pass
-
 
     ## TODO
 
@@ -199,4 +208,3 @@ class TanhNode(object):
 
     def get_predecessors(self):
         pass
-
