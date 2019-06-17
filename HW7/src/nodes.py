@@ -94,7 +94,6 @@ class SquaredL2DistanceNode(object):
         self.d_out = None
         self.a = a
         self.b = b
-        # Variable for caching values between forward and backward
         self.a_minus_b = None
 
     def forward(self):
@@ -152,12 +151,12 @@ class SumNode(object):
         :param b: node for which b.out is a numpy array of the same shape as a
         node_name: node's name (a string)
         """
-        self.a = a
-        self.b = b
         self.node_name = node_name
         self.out = None
         self.d_out = None
-
+        self.a = a
+        self.b = b
+        
     def forward(self):
         self.out = self.a.out + self.b.out
         self.d_out = np.zeros(self.out.shape)
@@ -182,25 +181,31 @@ class AffineNode(object):
         :param b: node for which b.out is a numpy array of shape (m) (i.e. vector of length m)
     """
     def __init__(self, W, x, b, node_name):
-        self.W = W
-        self.x = x
-        self.b = b
         self.node_name = node_name
         self.out = None
         self.d_out = None
-
+        self.W = W
+        self.x = x
+        self.b = b
+        
     def forward(self):
         self.out = np.dot(self.W.out, self.x.out) + self.b.out
         self.d_out = np.zeros(self.out.shape)
         return self.out
 
     def backward(self):
-        pass
+        m, _ = self.W.out.shape
+        d_W = np.dot(np.ones(m,1), self.x.out.reshape(1,-1))
+        d_x = np.dot(self.W.out.T, self.d_out)
+        d_b = self.d_out 
+
+        self.W.d_out += d_W
+        self.x.d_out += d_x
+        self.b.d_out += d_b
+        return self.d_out
 
     def get_predecessors(self):
         return [self.x, self.W, self.b]
-
-    ## TODO
 
 
 class TanhNode(object):
@@ -208,11 +213,11 @@ class TanhNode(object):
         :param a: node for which a.out is a numpy array
     """
     def __init__(self, a, node_name):
-        self.a = a
         self.node_name = node_name
         self.out = None
         self.d_out = None
-
+        self.a = a
+       
     def forward(self):
         self.out = np.tanh(self.a.out)
         self.d_out = np.zeros(self.out.shape)
@@ -234,11 +239,12 @@ class SoftmaxNode(object):
         :param b: node for which b.out is a numpy array of shape (m) (i.e. vector of length m)
     """
     def __init__(self, a, node_name):
-        self.a = a
         self.node_name = node_name
         self.out = None
         self.d_out = None
 
+        self.a = a
+        
     def forward(self):
         normalizer_offset = np.amax(self.a.out, axis=1, keepdims=True)
         numerator = np.exp(self.a.out - normalizer_offset)
