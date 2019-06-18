@@ -261,4 +261,31 @@ class SoftmaxNode(object):
 
     def get_predecessors(self):
         return [self.a]
+
+class NegativeLogLikelihoodNode(object):
+    """Node implementing softmax
+
+    :param probs: node for which probs.out is a numpy array of shape (n_classes,)
+    :param y: node containing the true class
+    """
+    def __init__(self, probs, y, node_name):
+        self.node_name = node_name
+        self.out = None
+        self.d_out = None
+        self.probs = probs
+        self.y = y
         
+    def forward(self):
+        self.out = -np.sum(np.log(self.y.out * self.probs.out))
+        self.d_out = np.zeros(self.out.shape)
+        return self.out
+
+    def backward(self):
+        d_probs = -self.y.out * np.reciprocal(self.probs.out)
+        d_y = -np.log(self.probs.out)
+        self.probs.d_out += d_probs
+        self.y.d_out += d_y
+        return self.d_out
+
+    def get_predecessors(self):
+        return [self.probs, self.y]
