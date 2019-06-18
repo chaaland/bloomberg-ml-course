@@ -232,29 +232,32 @@ class TanhNode(object):
         return [self.a]
 
 class SoftmaxNode(object):
-    """Node implementing affine transformation (W,x,b)-->Wx+b, where W is a matrix,
-    and x and b are vectors
-        :param W: node for which W.out is a numpy array of shape (m,d)
-        :param x: node for which x.out is a numpy array of shape (d)
-        :param b: node for which b.out is a numpy array of shape (m) (i.e. vector of length m)
+    """Node implementing softmax
+
+    :param a: node for which a.out is a numpy array of shape (n_classes,)
     """
     def __init__(self, a, node_name):
         self.node_name = node_name
         self.out = None
         self.d_out = None
-
         self.a = a
         
     def forward(self):
-        normalizer_offset = np.amax(self.a.out, axis=1, keepdims=True)
+        normalizer_offset = np.amax(self.a.out)
         numerator = np.exp(self.a.out - normalizer_offset)
-        denominator = np.sum(numerator, axis=1, keepdims=True)
+        denominator = np.sum(numerator)
         self.out = numerator / denominator
         self.d_out = np.zeros(self.out.shape)
         return self.out
 
     def backward(self):
-        pass
+        exp_input = np.exp(self.a.out)
+        partition_function = np.sum(exp_input)
+        A = -np.exp(self.a.out.reshape((-1,1)) + self.a.out.reshape((1,-1))) / np.square(partition_function)
+        B = exp_input / partition_function
+        d_a = np.dot(np.transpose(np.diag(B, k=0) + A), self.d_out)
+        self.a.d_out += d_a
+        return self.d_out
 
     def get_predecessors(self):
         return [self.a]
