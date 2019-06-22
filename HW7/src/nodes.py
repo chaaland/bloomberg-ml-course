@@ -129,7 +129,7 @@ class L2NormPenaltyNode(object):
         self.w = w
 
     def forward(self):
-        self.out = self.l2_reg * np.linalg.norm(self.w.out)
+        self.out = self.l2_reg * np.square(np.linalg.norm(self.w.out))
         self.d_out = np.zeros(self.out.shape)
         return self.out
 

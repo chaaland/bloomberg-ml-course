@@ -1,27 +1,26 @@
 import unittest
 import logging
-import ridge_regression as ridge
 import numpy as np
 import test_utils
-import graph
-import nodes
+from src import graph, nodes, ridge_regression as ridge
 
 logging.basicConfig(format="%(levelname)s: %(message)s", level=logging.DEBUG)
 
 
 class TestAll(unittest.TestCase):
+    a = nodes.ValueNode("a")
+    b = nodes.ValueNode("b")
+    max_allowed_rel_err = 1e-5
+
     def test_SumNode(self):
-        max_allowed_rel_err = 1e-5
-        a = nodes.ValueNode("a")
-        b = nodes.ValueNode("b")
         dims = ()
         a_val = np.array(np.random.standard_normal(dims))
         b_val = np.array(np.random.standard_normal(dims))
-        sum_node = nodes.SumNode(a, b, "sum node")
+        sum_node = nodes.SumNode(self.a, self.b, "sum node")
 
         init_vals = {"a": a_val, "b": b_val}
         max_rel_err = test_utils.test_node_backward(sum_node, init_vals, delta=1e-7)
-        self.assertTrue(max_rel_err < max_allowed_rel_err)
+        self.assertTrue(max_rel_err < self.max_allowed_rel_err)
 
     def test_L2NormPenaltyNode(self):
         max_allowed_rel_err = 1e-5

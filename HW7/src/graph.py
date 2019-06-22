@@ -96,7 +96,8 @@ class ComputationGraphFunction:
 ###### Computation graph utilities
 def sort_topological(sink):
     """Returns a list of the sink node and all its ancestors in topologically sorted order.
-    Subgraph of these nodes must form a DAG."""
+    Subgraph of these nodes must form a DAG.
+    """
     L = []  # Empty list that will contain the sorted nodes
     T = set()  # Set of temporarily marked nodes
     P = set()  # Set of permanently marked nodes

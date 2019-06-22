@@ -1,10 +1,7 @@
 import matplotlib.pyplot as plt
-import setup_problem
 from sklearn.base import BaseEstimator, RegressorMixin
 import numpy as np
-import nodes
-import graph
-import plot_utils
+from . import setup_problem, nodes, graph, plot_utils
 
 
 class MLPRegression(BaseEstimator, RegressorMixin):
@@ -25,10 +22,20 @@ class MLPRegression(BaseEstimator, RegressorMixin):
         # Build computation graph
         self.x = nodes.ValueNode(node_name="x")  # to hold a vector input
         self.y = nodes.ValueNode(node_name="y")  # to hold a scalar response
-        ## TODO
+
+        self.inputs = [self.x]
+        self.outcomes = [self.y]
+        self.w = nodes.ValueNode(node_name="w")  # to hold the parameter vector
+        self.b = nodes.ValueNode(node_name="b")  # to hold the bias parameter (scalar)
+        self.parameters = [self.w, self.b]
+
+        self.graph = graph.ComputationGraphFunction(
+            self.inputs, self.outcomes, self.parameters, self.prediction, self.objective
+        )
+
 
     def fit(self, X, y):
-        num_instances, num_ftrs = X.shape
+        n_instances, _ = X.shape
         y = y.reshape(-1)
 
         ## TODO: Initialize parameters (small random numbers -- not all 0, to break symmetry )
@@ -38,7 +45,7 @@ class MLPRegression(BaseEstimator, RegressorMixin):
         self.graph.set_parameters(init_values)
 
         for epoch in range(self.max_num_epochs):
-            shuffle = np.random.permutation(num_instances)
+            shuffle = np.random.permutation(n_instances)
             epoch_obj_tot = 0.0
             for j in shuffle:
                 obj, grads = self.graph.get_gradients(
@@ -53,10 +60,10 @@ class MLPRegression(BaseEstimator, RegressorMixin):
                     self.graph.increment_parameters(steps)
 
             if epoch % 50 == 0:
-                train_loss = sum((y - self.predict(X, y)) ** 2) / num_instances
+                train_loss = sum((y - self.predict(X, y)) ** 2) / n_instances
                 print(f"Epoch {epoch}:", end=" ", flush=True)
                 print(
-                    f"Avg objective={epoch_obj_tot / num_instances}",
+                    f"Avg objective={epoch_obj_tot / n_instances}",
                     end=" ",
                     flush=True,
                 )
@@ -68,9 +75,9 @@ class MLPRegression(BaseEstimator, RegressorMixin):
         except AttributeError:
             raise RuntimeError("You must train classifer before predicting data!")
 
-        num_instances = X.shape[0]
-        preds = np.zeros(num_instances)
-        for j in range(num_instances):
+        n_instances = X.shape[0]
+        preds = np.zeros(n_instances)
+        for j in range(n_instances):
             preds[j] = self.graph.get_prediction(input_values={"x": X[j]})
 
         return preds

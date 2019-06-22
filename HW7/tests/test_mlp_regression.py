@@ -1,14 +1,10 @@
 """ Test cases for nodes.py """
-import pdb
 
-#        pdb.set_trace()
-#
 import unittest
 import logging
-import mlp_regression
-import nodes
 import numpy as np
 import test_utils
+from src import mlp_regression, nodes
 
 
 class TestNodes(unittest.TestCase):

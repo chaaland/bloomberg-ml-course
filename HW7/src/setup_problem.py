@@ -123,7 +123,7 @@ def reconstitute_problem(coefs_true, x_train, y_train, x_test, y_test):
 
 
 def load_problem(file_name):
-    file_rel_path = os.path.join("..", "data", file_name)
+    file_rel_path = os.path.join("data", file_name)
     f_myfile = open(file_rel_path, "rb")
     data = pickle.load(f_myfile)
     f_myfile.close()

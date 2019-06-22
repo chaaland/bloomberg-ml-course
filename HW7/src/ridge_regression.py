@@ -1,10 +1,7 @@
-import setup_problem
 from sklearn.base import BaseEstimator, RegressorMixin
 from sklearn.exceptions import NotFittedError
 import numpy as np
-import nodes
-import graph
-import plot_utils
+from . import setup_problem, nodes, graph, plot_utils
 
 
 class RidgeRegression(BaseEstimator, RegressorMixin):

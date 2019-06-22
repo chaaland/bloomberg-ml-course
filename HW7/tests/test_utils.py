@@ -17,7 +17,7 @@ License: Creative Commons Attribution 4.0 International License
 """
 
 import logging
-import graph
+from src import graph
 import numpy as np
 
 logging.basicConfig(format="%(levelname)s: %(message)s", level=logging.DEBUG)
@@ -65,7 +65,6 @@ def test_node_backward(node, init_vals, delta=1e-7):
             partial_backward = parent.d_out[
                 it.multi_index
             ]  # partial as computed by backward
-            # pdb.set_trace()
             rel_err = relative_error(partial_est, partial_backward)
             max_rel_err = max(max_rel_err, rel_err)
             it.iternext()
