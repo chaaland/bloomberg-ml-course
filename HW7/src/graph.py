@@ -26,15 +26,15 @@ License: Creative Commons Attribution 4.0 International License
 
 import numpy as np
 
+
 class ComputationGraphFunction:
     def __init__(self, inputs, outcomes, parameters, prediction, objective):
         """ 
-        Parameters:
-        inputs: list of ValueNode objects containing inputs (in the ML sense)
-        outcomes: list of ValueNode objects containing outcomes (in the ML sense)
-        parameters: list of ValueNode objects containing values we will optimize over
-        prediction: node whose 'out' variable contains our prediction
-        objective:  node containing the objective for which we compute the gradient
+        :param inputs: list of ValueNode objects containing inputs (in the ML sense)
+        :param outcomes: list of ValueNode objects containing outcomes (in the ML sense)
+        :param parameters: list of ValueNode objects containing values we will optimize over
+        :param prediction: node whose 'out' variable contains our prediction
+        :param objective:  node containing the objective for which we compute the gradient
         """
 
         self.inputs = inputs
@@ -76,8 +76,10 @@ class ComputationGraphFunction:
         return obj
 
     def get_gradients(self, input_values, outcome_values):
-        obj = self.get_objective(input_values, outcome_values) #need forward pass anyway
-        #print("backward node list: ",self.objective_node_list_backward)
+        # need forward pass anyway
+        obj = self.get_objective(
+            input_values, outcome_values
+        ) 
         backward_graph(self.objective, node_list=self.objective_node_list_backward)
         parameter_gradients = {}
         for node in self.parameters:
@@ -86,33 +88,42 @@ class ComputationGraphFunction:
 
     def get_prediction(self, input_values):
         self.__set_values__(input_values)
-        pred = forward_graph(self.prediction, node_list=self.prediction_node_list_forward)
+        pred = forward_graph(
+            self.prediction, node_list=self.prediction_node_list_forward
+        )
         return pred
 
 ###### Computation graph utilities
-
 def sort_topological(sink):
     """Returns a list of the sink node and all its ancestors in topologically sorted order.
-    Subgraph of these nodes must form a DAG."""
-    L = [] # Empty list that will contain the sorted nodes
-    T = set() # Set of temporarily marked nodes
-    P = set() # Set of permanently marked nodes
+    Subgraph of these nodes must form a DAG.
+    """
+    L = []  # Empty list that will contain the sorted nodes
+    T = set()  # Set of temporarily marked nodes
+    P = set()  # Set of permanently marked nodes
 
     def visit(node):
         if node in P:
             return
         if node in T:
-            raise 'Your graph is not a DAG!'
-        T.add(node) # mark node temporarily
+            raise "Your graph is not a DAG!"
+        T.add(node)  # mark node temporarily
         for predecessor in node.get_predecessors():
             visit(predecessor)
-        P.add(node) # mark node permanently
+        P.add(node)  # mark node permanently
         L.append(node)
 
     visit(sink)
     return L
 
+
 def forward_graph(graph_output_node, node_list=None):
+    """Run forward pass of the computation graph
+
+    :param graph_output_node: node name whose output is desired
+    :param node_list: topologically sorted nodes to compute in order
+    to compute the value of graph_output_node
+    """
     # If node_list is not None, it should be sort_topological(graph_output_node)
     if node_list is None:
         node_list = sort_topological(graph_output_node)
@@ -120,17 +131,23 @@ def forward_graph(graph_output_node, node_list=None):
         out = node.forward()
     return out
 
+
 def backward_graph(graph_output_node, node_list=None):
     """
     If node_list is not None, it should be the reverse of sort_topological(graph_output_node).
     Assumes that forward_graph has already been called on graph_output_node.
     Sets d_out of each node to the appropriate derivative.
-    """ 
+
+    :param graph_output_node: node name whose output is desired
+    :param node_list: topologically sorted nodes to compute in order
+    to compute the value of graph_output_node
+    """
     if node_list is None:
         node_list = sort_topological(graph_output_node)
         node_list.reverse()
 
-    graph_output_node.d_out = np.array(1) # Derivative of graph output w.r.t. itself is 1
+    # Derivative of graph output w.r.t. itself is 1
+    graph_output_node.d_out = np.array(1)
 
     for node in node_list:
         node.backward()
