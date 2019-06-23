@@ -28,7 +28,7 @@ def linear_comb_generator(fns, coefs):
     return f
 
 
-def get_target_and_featurizer(num_basis_fns=100, num_nonzero=10, coefs_true=None):
+def get_target_and_featurizer(n_basis_fns=100, n_nonzero=10, coefs_true=None):
     # We'll create a basis of step functions on the interval [0,1]. We'll then
     # construct a linear combination of these step functions to be our target
     # function. We'll construct a function to "featurize" an input in [0,1]
@@ -38,15 +38,15 @@ def get_target_and_featurizer(num_basis_fns=100, num_nonzero=10, coefs_true=None
     # Construct basis, to be used for generating target function
 
     if coefs_true is not None:
-        num_basis_fns = len(coefs_true)
+        n_basis_fns = len(coefs_true)
     else:
-        nonzero_indices = np.random.choice(num_basis_fns, num_nonzero)
-        coefs_true = np.zeros(num_basis_fns)
-        coefs_true[nonzero_indices] = np.random.randn(num_nonzero)
+        nonzero_indices = np.random.choice(n_basis_fns, n_nonzero)
+        coefs_true = np.zeros(n_basis_fns)
+        coefs_true[nonzero_indices] = np.random.randn(n_nonzero)
 
     all_basis_fns = [
         step_fn_generator(stepLoc=s)
-        for s in np.linspace(0, 1, num_basis_fns, endpoint=False)
+        for s in np.linspace(0, 1, n_basis_fns, endpoint=False)
     ]
 
     # Construct target function (the Bayes prediction function)
@@ -55,8 +55,8 @@ def get_target_and_featurizer(num_basis_fns=100, num_nonzero=10, coefs_true=None
     def featurize(x):
         n = len(x)
         # Featurize input values in [0,1]
-        X_ftrs = np.empty((n, num_basis_fns))
-        for ftr_num in range(num_basis_fns):
+        X_ftrs = np.empty((n, n_basis_fns))
+        for ftr_num in range(n_basis_fns):
             X_ftrs[:, ftr_num] = all_basis_fns[ftr_num](x)
         return X_ftrs
 
@@ -88,8 +88,8 @@ def get_data_splits(x, y, test_frac=0.2):
 
 def generate_problem(
     n=200,
-    num_basis_fns=400,
-    num_nonzero=10,
+    n_basis_fns=400,
+    n_nonzero=10,
     noise_scale=0.25,
     tdof=6,
     test_frac=0.2,
@@ -97,7 +97,7 @@ def generate_problem(
     file_name="lasso_data.pickle",
 ):
     target_fn, coefs_true, featurize = get_target_and_featurizer(
-        num_basis_fns, num_nonzero
+        n_basis_fns, n_nonzero
     )
     x, y = generate_data(target_fn, n, noise_scale, tdof)
     x_train, y_train, x_test, y_test = get_data_splits(x, y, test_frac)
@@ -144,14 +144,14 @@ def main():
     if GENERATE_PROBLEM:
         n = 1000
         test_frac = 0.9
-        num_basis_fns = 400
-        num_nonzero = 10
+        n_basis_fns = 400
+        n_nonzero = 10
         noise_scale = 0.25  # scale factor on noise
         tdof = 6  # degrees of freedom of t-distribution generating noise
         x_train, y_train, x_val, y_val, target_fn, coefs_true, featurize = generate_problem(
             n=n,
-            num_basis_fns=num_basis_fns,
-            num_nonzero=num_nonzero,
+            n_basis_fns=n_basis_fns,
+            n_nonzero=n_nonzero,
             noise_scale=noise_scale,
             test_frac=test_frac,
             write_problem=WRITE_PROBLEM,
@@ -173,7 +173,7 @@ def main():
         x, target_fn(x), "r", label="Target function (i.e. Bayes prediction function)"
     )
     legend = ax.legend(loc="upper center", shadow=True)
-    plt.show(block=False)
+    plt.show()
 
 
 if __name__ == "__main__":

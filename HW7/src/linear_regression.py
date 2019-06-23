@@ -3,7 +3,6 @@ import matplotlib.pyplot as plt
 from sklearn.base import BaseEstimator, RegressorMixin
 from sklearn.exceptions import NotFittedError
 import numpy as np
-# from . import setup_problem, nodes, graph, plot_utils
 import setup_problem, nodes, graph, plot_utils
 
 
@@ -111,8 +110,9 @@ def main():
     plot_utils.plot_prediction_functions(
         x, pred_fns, x_train, y_train, legend_loc="best"
     )
-    os.makedirs(os.path.join("img", exist_ok=True))
-    plt.savefig("img/linear_regression.png")
+    os.makedirs("img", exist_ok=True)
+    plt.savefig(os.path.join("img", "linear_regression.png"))
+    plt.show()
 
 if __name__ == "__main__":
     main()

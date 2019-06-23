@@ -8,6 +8,7 @@ from src import mlp_regression, nodes
 
 
 class TestNodes(unittest.TestCase):
+
     def test_AffineNode(self):
         W = nodes.ValueNode(node_name="W")
         x = nodes.ValueNode(node_name="x")
@@ -38,14 +39,14 @@ class TestNodes(unittest.TestCase):
 
     def test_mlp_regression_gradient(self):
         estimator = mlp_regression.MLPRegression()
-        num_hidden_units = 4
-        num_ftrs = 5
-        input_vals = {"x": np.random.randn(num_ftrs)}
+        n_hidden_units = 4
+        n_ftrs = 5
+        input_vals = {"x": np.random.randn(n_ftrs)}
         outcome_vals = {"y": np.array(np.random.randn())}
         parameter_vals = {
-            "W1": np.random.standard_normal((num_hidden_units, num_ftrs)),
-            "b1": np.random.standard_normal((num_hidden_units)),
-            "w2": np.random.standard_normal((num_hidden_units)),
+            "W1": np.random.standard_normal((n_hidden_units, n_ftrs)),
+            "b1": np.random.standard_normal((n_hidden_units)),
+            "W2": np.random.standard_normal((n_hidden_units)),
             "b2": np.array(np.random.randn()),
         }
 

@@ -14,4 +14,3 @@ def plot_prediction_functions(x, pred_fns, x_train, y_train, legend_loc="best"):
     for i in range(len(pred_fns)):
         ax.plot(x, pred_fns[i]["preds"], label=pred_fns[i]["name"])
     legend = ax.legend(loc=legend_loc, shadow=True)
-    plt.show()

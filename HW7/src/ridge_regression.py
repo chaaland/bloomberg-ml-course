@@ -1,7 +1,9 @@
+import os
+import matplotlib.pyplot as plt
 from sklearn.base import BaseEstimator, RegressorMixin
 from sklearn.exceptions import NotFittedError
 import numpy as np
-from . import setup_problem, nodes, graph, plot_utils
+import setup_problem, nodes, graph, plot_utils
 
 
 class RidgeRegression(BaseEstimator, RegressorMixin):
@@ -37,7 +39,7 @@ class RidgeRegression(BaseEstimator, RegressorMixin):
             self.inputs, self.outcomes, self.parameters, self.prediction, self.objective
         )
 
-    def fit(self, X, y):
+    def fit(self, X, y, print_every=5):
         n_instances, n_ftrs = X.shape
         y = y.reshape(-1)
 
@@ -56,16 +58,15 @@ class RidgeRegression(BaseEstimator, RegressorMixin):
                 steps = {}
                 for param_name in grads:
                     steps[param_name] = -self.step_size * grads[param_name]
-                    # should this be de-dented one level??
-                    self.graph.increment_parameters(steps)
+                self.graph.increment_parameters(steps)
 
-            if epoch % 50 == 0:
+            if epoch % print_every == 0:
                 y_hat = self.predict(X, y)
                 resid = y - y_hat
                 train_loss = sum(resid ** 2) / n_instances
                 print(f"Epoch {epoch}:", end=" ", flush=True)
-                print(f"Avg objective={epoch_obj_tot / n_instances}", end=" ", flush=True)
-                print(f"Avg training loss: {train_loss}", flush=True)
+                print(f"Avg objective={epoch_obj_tot / n_instances:.4f}", end=" ", flush=True)
+                print(f"Avg training loss: {train_loss:.4f}", flush=True)
 
     def predict(self, X, y=None):
         try:
@@ -84,7 +85,7 @@ class RidgeRegression(BaseEstimator, RegressorMixin):
 
 
 def main():
-    lasso_data_fname = "lasso_data.pickle"
+    lasso_data_fname = "lasso_data.pkl"
     x_train, y_train, x_val, y_val, target_fn, coefs_true, featurize = setup_problem.load_problem(
         lasso_data_fname
     )
@@ -99,14 +100,14 @@ def main():
 
     l2reg = 1
     estimator = RidgeRegression(l2_reg=l2reg, step_size=0.00005, max_num_epochs=2000)
-    estimator.fit(X_train, y_train)
+    estimator.fit(X_train, y_train, print_every=100)
     name = "Ridge with L2Reg=" + str(l2reg)
     pred_fns.append({"name": name, "preds": estimator.predict(X)})
 
     l2reg = 0
     estimator = RidgeRegression(l2_reg=l2reg, step_size=0.0005, max_num_epochs=500)
-    estimator.fit(X_train, y_train)
-    name = "Ridge with L2Reg=" + str(l2reg)
+    estimator.fit(X_train, y_train, print_every=100)
+    name = f"Ridge with L2Reg={l2reg}"
     pred_fns.append({"name": name, "preds": estimator.predict(X)})
 
     # Let's plot prediction functions and compare coefficients for several fits
@@ -123,6 +124,10 @@ def main():
     plot_utils.plot_prediction_functions(
         x, pred_fns, x_train, y_train, legend_loc="best"
     )
+    os.makedirs("img", exist_ok=True)
+    plt.savefig(os.path.join("img", "ridge_regression.png"))
+    plt.show()
+
 
 
 if __name__ == "__main__":

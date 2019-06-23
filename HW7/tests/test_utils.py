@@ -37,9 +37,9 @@ def test_node_backward(node, init_vals, delta=1e-7):
         parent_node.out = init_vals[parent_node.node_name]
 
     out = graph.forward_graph(node)
-    d_out = np.random.standard_normal(
-        out.shape
-    )  # simulate a random derivative w.r.t. out
+
+    # simulate a random derivative w.r.t. out
+    d_out = np.random.standard_normal(out.shape)
     node.d_out = d_out
     node.backward()  # sets partials in parent.d_node for each parent
 

@@ -194,8 +194,8 @@ class AffineNode(object):
         return self.out
 
     def backward(self):
-        m, _ = self.W.out.shape
-        d_W = np.dot(np.ones(m,1), self.x.out.reshape(1,-1))
+        m = self.W.out.shape[0]
+        d_W = np.dot(self.d_out.reshape((-1,1)), self.x.out.reshape((1,-1)))
         d_x = np.dot(self.W.out.T, self.d_out)
         d_b = self.d_out 
 
